@@ -3,7 +3,7 @@ const cors = require('cors');
 require('dotenv').config();
 const connectDB = require('./config/db');
 const blogRoutes = require('./routes/blogRoutes');
-const uploadRoutes = require('./routes/uploadRoutes'); // Import here
+const uploadRoutes = require('./routes/uploadRoutes');
 
 // Connect to MongoDB
 connectDB();
@@ -11,20 +11,30 @@ connectDB();
 const app = express();
 
 // Middleware
-app.use(cors());
+// Configured to permit incoming requests from your deployed frontend domain securely
+app.use(cors({
+    origin: [
+        'http://localhost:5173', // Local Vite Dev Server
+        /\.vercel\.app$/        // Any staging or production Vercel deployment URL
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
+}));
+
 app.use(express.json());
 
 // Routes
 app.use('/api/blogs', blogRoutes);
-app.use('/api/upload', uploadRoutes); // Mount here
+app.use('/api/upload', uploadRoutes); // Accessible via /api/upload/signature
 
 // Base Route
 app.get('/', (req, res) => {
-    res.send('Blog API is running...');
+    res.status(200).json({ message: 'Blog API is running smoothly...' });
 });
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+// Explicitly bind to '0.0.0.0' interface to allow Render infrastructure routing
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server is running on port ${PORT}`);
 });
